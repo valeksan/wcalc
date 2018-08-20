@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>components/NumBox.qml</file>
+        <file>components/ButtonB.qml</file>
+        <file>AppHeader.qml</file>
+        <file>Colors.qml</file>
+        <file>components/MenuBackIcon.qml</file>
+        <file>AppBody.qml</file>
+        <file>pages/Calc.qml</file>
+        <file>pages/LeftMenu.qml</file>
+        <file>components/LeftMenuButton.qml</file>
+        <file>components/LeftMenuCategory.qml</file>
+        <file>components/LeftMenuSpacer.qml</file>
+        <file>controls/Loader.qml</file>
+        <file>controls/Variables.qml</file>
+        <file>fonts/fontawesome-webfont.ttf</file>
+        <file>FontAwesome.qml</file>
+        <file>main.cpp</file>
+    </qresource>
+</RCC>
