@@ -7,6 +7,33 @@ import "../controls" as Awesome
 
 Item {
     id: page
+
+    function fixValue(x, precision) {
+        return Math.round(x*Math.pow(10,precision))/Math.pow(10,precision);
+    }
+    function getS(w_par, h_par, c_par, precision) {
+        return fixValue(w_par*h_par*c_par, precision);
+    }
+    function getPrice(sab_par, precision) {
+        return fixValue(sab_par*200, precision);
+    }
+    function sumS(precision) {
+        var i;
+        var sum = 0.0;
+        for(i=0; i<modelWindowSizes.count; i++) {
+            sum += getS(modelWindowSizes.get(i).width, modelWindowSizes.get(i).height, modelWindowSizes.get(i).count, precision);
+        }
+        return fixValue(sum, precision);
+    }
+    function sumPrices(precision) {
+        var i;
+        var sum = 0.0;
+        for(i=0; i<modelWindowSizes.count; i++) {
+            sum += getPrice(getS(modelWindowSizes.get(i).width, modelWindowSizes.get(i).height, modelWindowSizes.get(i).count, precision), precision);
+        }
+        return fixValue(sum, precision);
+    }
+
     Rectangle {
         id: controlPanel
         anchors.top: parent.top
@@ -33,7 +60,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: 14
-                text: "#"
+                text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + "\nЦена: " + sumPrices(3)) : ""
             }
         }
         ColumnLayout {
@@ -57,10 +84,10 @@ Item {
                     prefix: "Ширина: "
                     suffix: " м"
                     editable: true
-                    precision: 2
-                    minimumValue: 0.00
+                    precision: 3
+                    minimumValue: 0
                     maximumValue: 1000000.00
-                    step: 0.01
+                    step: 0.001
                     buttonsAlignType: 0
                     onFinishEdit: {
                         //console.log(number)
@@ -82,10 +109,10 @@ Item {
                     prefix: "Высота: "
                     suffix: " м"
                     editable: true
-                    precision: 2
-                    minimumValue: 0.00
+                    precision: 3
+                    minimumValue: 0
                     maximumValue: 1000000.00
-                    step: 0.01
+                    step: 0.001
                     buttonsAlignType: 0
                     onFinishEdit: {
                         //console.log(number)
@@ -99,7 +126,7 @@ Item {
                     Layout.fillWidth: true
                     height: 50
                     Components.NumBox {
-                        id: width_calc_x
+                        id: count_calc_property
                         anchors.fill: parent
                         value: 1
                         prefix: "Количество: x"
@@ -135,12 +162,13 @@ Item {
                         anchors.fill: parent
                         Text {
                             id: previewText
+                            property double s_ab: getS(width_calc_property.value, height_calc_property.value, count_calc_property.value, 3)
                             height: 50
                             anchors.fill: parent
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             font.pixelSize: 14
-                            text: "..."
+                            text: s_ab > 0.0 ? ("S' = " + s_ab + "\nЦена: " + getPrice(s_ab, 3)) : ""
                         }
                     }
                 }
@@ -204,7 +232,9 @@ Item {
                     colorOn: Qt.lighter(color, 1.1)
                     text: "+"
                     onClicked: {
-                        console.log("+")
+                        //console.log("+")
+                        if(width_calc_property.value > 0 && height_calc_property.value > 0)
+                            modelWindowSizes.append({"width":width_calc_property.value,"height":height_calc_property.value,"count":count_calc_property.value})
                     }
                     onPressed: {
                         state = "on"
@@ -230,14 +260,26 @@ Item {
 
         ListModel {
             id: modelWindowSizes
+            ListElement {
+                width: 0.5
+                height: 0.76
+                count: 1
+            }
+            ListElement {
+                width: 0.3
+                height: 0.55
+                count: 2
+            }
         }
 
         ScrollView {
             id: items
-            anchors.fill: parent
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            contentWidth: parent.width
             ListView {
                 width: parent.width
-                model: 20
+                model: modelWindowSizes
                 delegate: delegateWindowSizeListItem
                 spacing: 2
             }
@@ -253,11 +295,8 @@ Item {
 
         Component {
             id: delegateWindowSizeListItem
-            ItemDelegate {
+            Item {
                 property bool isEdit: false
-
-                text: "Item " + (index + 1)
-
                 width: parent.width
                 height: 50
                 Row {
@@ -266,6 +305,33 @@ Item {
                         height: parent.height
                         width: parent.width
                         color: "#f1f1f1"
+                        Rectangle {
+                            id: rectSizeInfo
+                            height: parent.height-4
+                            width: 100
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 2
+                            color: "#f1f3ff"
+                            border.color: Qt.darker(color, 1.2)
+                            border.width: 1
+                            Text {
+                                id: textSizeWindow
+                                text: model.width + " x " + model.height + ((model.count>1)?(" x" + model.count):"")
+                                anchors.fill: parent
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+                        Text {
+                            id: info
+                            property double s_ab: getS(model.width, model.height, model.count, 3)
+                            text: "S' = " + s_ab + "\nЦена: " + getPrice(s_ab, 3);
+                            anchors.left: rectSizeInfo.right
+                            anchors.leftMargin: 10
+                            height: parent.height
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
                 }
             }
