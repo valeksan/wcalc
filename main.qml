@@ -3,17 +3,24 @@ import QtQuick.Controls 2.2
 import QtQuick.Window 2.0
 import QtQuick.Layouts 1.3
 
+import Qt.labs.settings 1.0
+
 import "components" as Components
-import "controls" as Awesome
 
 ApplicationWindow {
     id: app
     visible: true
     title:   qsTr("Smart home")
-    width:  Screen.desktopAvailableWidth
-    height: Screen.desktopAvailableHeight
+    minimumWidth: minimumPageWidth
 
-    property int headerHeight: height <= 320 ? 0.1*height : 50
+    function isDesktopApp() {
+        return Qt.platform.os === "linux" || Qt.platform.os === "unix" || Qt.platform.os === "windows";
+    }
+
+    width:  isDesktopApp() ? 240 : Screen.desktopAvailableWidth
+    height: isDesktopApp() ? 300 : Screen.desktopAvailableHeight
+
+    property int headerHeight: 0.1*minDim < 25 ? 25 : (0.1*minDim > 50 ? 50 : 0.1*minDim)
     property int footerHeight: 0
 
     property int minimumPageHeight: 320-headerHeight-footerHeight
@@ -32,6 +39,12 @@ ApplicationWindow {
         }
     }
 
+    Settings {
+        id: settings
+        category: "App"
+        property string currency: "руб"
+    }
+
     Colors {
         id: appColors
     }
@@ -40,9 +53,6 @@ ApplicationWindow {
         id: awesome
         resource: "qrc:///fonts/fontawesome-webfont.ttf"
     }
-//    Text {
-//        text: awesome.icons.fa_angle_down
-//    }
 
     header: AppHeader {
         id: appHeader

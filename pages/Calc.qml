@@ -3,10 +3,13 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 
 import "../components" as Components
-import "../controls" as Awesome
 
 Item {
     id: page
+
+    function fixFontSize(height, minHeight, fontStandartSize) {
+        return ((height < minHeight) ? height*fontStandartSize/minHeight*1.0 : fontStandartSize);
+    }
 
     function fixValue(x, precision) {
         return Math.round(x*Math.pow(10,precision))/Math.pow(10,precision);
@@ -33,17 +36,55 @@ Item {
         }
         return fixValue(sum, precision);
     }
+    function findWindow(w_par, h_par) {
+        var i;
+        var resultIndex = -1;
+        for(i=0; i<modelWindowSizes.count; i++) {
+            if(modelWindowSizes.get(i).width === w_par && modelWindowSizes.get(i).height === h_par) {
+                resultIndex = i;
+                break;
+            }
+        }
+        return resultIndex;
+    }
+    function addWindow(w_par, h_par, c_par, precision) {
+        var fixValueWidth = fixValue(w_par, precision);
+        var fixValueHeight = fixValue(h_par, precision);
+        var wIndex = -1;
+        if(fixValueWidth > 0.0 && fixValueHeight > 0.0) {
+            wIndex = findWindow(fixValueWidth, fixValueHeight);
+            if(wIndex !== -1) {
+                var prevCount = modelWindowSizes.get(wIndex).count;
+                modelWindowSizes.setProperty(wIndex, "count", prevCount + c_par);
+            } else {
+                modelWindowSizes.append( {"width":fixValueWidth,"height":fixValueHeight,"count":c_par} );
+            }
+        }
+    }
+    function getLastWidth() {
+        var count = modelWindowSizes.count;
+        var width = count > 0 ? modelWindowSizes.get(count-1).width : 0;
+        return width;
+    }
+    function getLastHeght() {
+        var count = modelWindowSizes.count;
+        var height = count > 0 ? modelWindowSizes.get(count-1).height : 0;
+        return height;
+    }
 
     Rectangle {
         id: controlPanel
+        property int minHeight: 0.3*app.height
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 150+9
+        //height: 150+9
+        height: minHeight < 100 ? 100 : minHeight
         color: appColors.pageBackgroundColor
+        visible: !windowsAddPanel.hideControls
         Rectangle {
             id: result
-            height: 50
+            height: (parent.height-8)/3
             color: "#f1f3ff"
             border.color: Qt.darker(color, 1.2)
             border.width: 1
@@ -52,15 +93,19 @@ Item {
             anchors.topMargin: 2
             anchors.leftMargin: 2
             width: parent.width-4
-            Text {
-                id: resultInfo
-                height: 50
-                width: parent.width-10
+            Components.ScalebleLoader {
                 x: 5
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 14
-                text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + "\nЦена: " + sumPrices(3)) : ""
+                height: parent.height
+                width: parent.width-10
+                minimumHeight: 50
+                content: Text {
+                    id: resultInfo
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 14
+                    //text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + (height < 50 ? "\t" : "\n") + "Цена: " + sumPrices(3)) : ""
+                    text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + "\n" + "Цена: " + sumPrices(3)) : ""
+                }
             }
         }
         ColumnLayout {
@@ -70,18 +115,18 @@ Item {
             anchors.leftMargin: 2
             anchors.right: parent.right
             anchors.rightMargin: 2
-            Layout.fillHeight: true
-            Layout.fillWidth: true
             spacing: 2
+            height: controlPanel.height-result.height-4
             RowLayout {
                 spacing: 2
                 Layout.fillWidth: true
                 Components.NumBox {
                     id: width_calc_property
                     Layout.fillWidth: true
-                    height: 50
-                    value: 0
-                    prefix: "Ширина: "
+                    Layout.fillHeight: true
+                    height: (controlPanel.height-8)/3
+                    value: getLastWidth()
+                    prefix: app.width < 250 ? "W: " : "Ширина: "
                     suffix: " м"
                     editable: true
                     precision: 3
@@ -93,20 +138,24 @@ Item {
                         //console.log(number)
                         value = number
                     }
+                    font.pixelSize: fixFontSize(height, 50, 14) // height < 50 ? height*14/50.0 : 14
+                    fontInEditMode.pixelSize: fixFontSize(height, 50, 14)
                 }
-                Text {
-                    text: "X"
-                    width: 30
-                    Layout.alignment: Qt.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pixelSize: 16
-                }
+//                Text {
+//                    text: "X"
+//                    width: 30
+//                    Layout.alignment: Qt.AlignVCenter
+//                    horizontalAlignment: Text.AlignHCenter
+//                    font.pixelSize: 16
+//                    height: parent.height
+//                }
                 Components.NumBox {
                     id: height_calc_property
                     Layout.fillWidth: true
-                    height: 50
-                    value: 0
-                    prefix: "Высота: "
+                    Layout.fillHeight: true
+                    height: (controlPanel.height-8)/3
+                    value: getLastHeght()
+                    prefix: app.width < 250 ? "H: " : "Высота: "
                     suffix: " м"
                     editable: true
                     precision: 3
@@ -118,19 +167,24 @@ Item {
                         //console.log(number)
                         value = number
                     }
+                    font.pixelSize: fixFontSize(height, 50, 14)
+                    fontInEditMode.pixelSize: fixFontSize(height, 50, 14)
                 }
             }
             RowLayout {
                 spacing: 2
+                Layout.fillWidth: true
                 Item {
                     Layout.fillWidth: true
-                    height: 50
+                    Layout.fillHeight: true
+                    height: (controlPanel.height-8)/3
                     Components.NumBox {
                         id: count_calc_property
                         anchors.fill: parent
                         value: 1
-                        prefix: "Количество: x"
+                        prefix: app.width < 250 ? "x" : "Количество: x"
                         suffix: " шт"
+                        visiblePrefixInEdit: false
                         editable: true
                         precision: 0
                         minimumValue: 1
@@ -141,34 +195,39 @@ Item {
                             //console.log(number)
                             value = number
                         }
+                        font.pixelSize: fixFontSize(height, 50, 14)
+                        fontInEditMode.pixelSize: fixFontSize(height, 50, 14)
                     }
                 }
-                Text {
-                    text: "="
-                    width: 30
-                    Layout.alignment: Qt.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pixelSize: 16
-                }
+//                Text {
+//                    text: ">"
+//                    width: 30
+//                    Layout.alignment: Qt.AlignVCenter
+//                    horizontalAlignment: Text.AlignHCenter
+//                    font.pixelSize: 16
+//                    height: parent.height
+//                }
                 Item {
                     Layout.fillWidth: true
-                    height: 50
+                    Layout.fillHeight: true
+                    height: (controlPanel.height-8)/3
                     Rectangle {
                         id: previewPanel
-                        height: 50
                         color: "#f1f3ff"
                         border.color: Qt.darker(color, 1.2)
                         border.width: 1
                         anchors.fill: parent
-                        Text {
-                            id: previewText
-                            property double s_ab: getS(width_calc_property.value, height_calc_property.value, count_calc_property.value, 3)
-                            height: 50
+                        Components.ScalebleLoader {
                             anchors.fill: parent
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 14
-                            text: s_ab > 0.0 ? ("S' = " + s_ab + "\nЦена: " + getPrice(s_ab, 3)) : ""
+                            minimumHeight: 50
+                            content: Text {
+                                id: previewText
+                                property double s_ab: getS(width_calc_property.value, height_calc_property.value, count_calc_property.value, height_calc_property.precision)
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 14
+                                text:  (s_ab > 0.0 ? "S' = " + s_ab + "\nЦена: " + getPrice(s_ab, height_calc_property.precision) : "")
+                            }
                         }
                     }
                 }
@@ -178,8 +237,10 @@ Item {
     Rectangle {
         id: windowsAddPanel
         property bool hideControls: false
-        height: 50
+        property int minHeight: 0.1*app.minDim
+        height: minHeight < 25 ? 25 : (minHeight > 50 ? 50 : minHeight)
         anchors.top: hideControls ? parent.top : controlPanel.bottom
+        anchors.topMargin: 2
         anchors.left: parent.left
         anchors.right: parent.right
         color: appColors.headerBackgroundColor
@@ -188,27 +249,33 @@ Item {
             anchors.fill: parent
             spacing: 2
             Item {
-                height: 50
+                id: leftControls
+                height: parent.height
                 Layout.fillWidth: true
-                Row {
-                    spacing: 5
+                Layout.fillHeight: true
+                Layout.minimumWidth: 40
+                Components.ScalebleLoader {
                     anchors.fill: parent
                     anchors.leftMargin: 10
-                    Text {
-                        id: titleWindowsList
-                        text: qsTr("Окна")
-                        font.pixelSize: 16
-                        height: parent.height
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    Text {
-                        id: iconTitle
-                        text: awesome.loaded ? (!windowsAddPanel.hideControls ? awesome.icons.fa_angle_down : awesome.icons.fa_angle_up) : ""
-                        font.pixelSize: 16
-                        font.bold: true
-                        height: parent.height
-                        renderType: Text.NativeRendering
-                        verticalAlignment: Text.AlignVCenter
+                    content: Row {
+                        spacing: 5
+                        Text {
+                            id: titleWindowsList
+                            text: qsTr("Окна")
+                            font.pixelSize: 16
+                            height: parent.height
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        Text {
+                            id: iconTitle
+                            text: awesome.loaded ? (!windowsAddPanel.hideControls ? awesome.icons.fa_angle_down : awesome.icons.fa_angle_up) : ""
+                            font.pixelSize: 16
+                            font.bold: true
+                            height: parent.height
+                            renderType: Text.NativeRendering
+                            verticalAlignment: Text.AlignVCenter
+                            font.family: awesome.family
+                        }
                     }
                 }
                 MouseArea {
@@ -219,28 +286,32 @@ Item {
                 }
             }
             Item {
-                height: 50
+                height: parent.height
                 Layout.fillWidth: true
-                Layout.maximumWidth: 150
+                Layout.fillHeight: true
+                Layout.maximumWidth: Math.max(height,60)
+                Layout.minimumWidth: 30
+                //Layout.minimumHeight: height
                 visible: !windowsAddPanel.hideControls
-                Components.ButtonB {
-                    id: btAddWindow
+                Components.ScalebleLoader {
                     anchors.fill: parent
                     anchors.margins: 4
-                    color: Qt.darker(windowsAddPanel.color, 1.1)
-                    colorOff: Qt.darker(windowsAddPanel.color, 1.1)
-                    colorOn: Qt.lighter(color, 1.1)
-                    text: "+"
-                    onClicked: {
-                        //console.log("+")
-                        if(width_calc_property.value > 0 && height_calc_property.value > 0)
-                            modelWindowSizes.append({"width":width_calc_property.value,"height":height_calc_property.value,"count":count_calc_property.value})
-                    }
-                    onPressed: {
-                        state = "on"
-                    }
-                    onReleased: {
-                        state = "off"
+                    content: Components.ButtonState {
+                        id: btAddWindow
+                        color: Qt.darker(windowsAddPanel.color, 1.1)
+                        colorOff: Qt.darker(windowsAddPanel.color, 1.1)
+                        colorOn: Qt.lighter(color, 1.1)
+                        text: "+"
+                        onClicked: {
+                            //console.log("+")
+                            addWindow(width_calc_property.value, height_calc_property.value, count_calc_property.value, height_calc_property.precision);
+                        }
+                        onPressed: {
+                            state = "on"
+                        }
+                        onReleased: {
+                            state = "off"
+                        }
                     }
                 }
             }
@@ -260,15 +331,10 @@ Item {
 
         ListModel {
             id: modelWindowSizes
-            ListElement {
-                width: 0.5
-                height: 0.76
-                count: 1
-            }
-            ListElement {
-                width: 0.3
-                height: 0.55
-                count: 2
+
+            Component.onCompleted: {
+                append({ "width": 0.5, "height": 0.76, "count": 1 });
+                append({ "width": 0.35, "height": 0.55, "count": 2 });
             }
         }
 

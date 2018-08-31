@@ -21,9 +21,10 @@ Rectangle {
     property color textColorDimmed: Qt.lighter(textColor, 1.3)
 
     property int textPixelSizeValue: 14
-    property int gradientBorder: 0
+    property int gradientBorderRadius: 0
     property int gradientBorderWidth: 10
     property bool enableGradientBorder: false
+    property var gradientBorder: null
 
     property alias font: button_state_text.font
 
@@ -68,7 +69,7 @@ Rectangle {
         height: enableGradientBorder ? button_border.height - gradientBorderWidth : button_border.height
         color: putColor()
         width: enableGradientBorder ? button_border.width - gradientBorderWidth : button_border.width
-        radius: gradientBorder
+        radius: gradientBorderRadius
         border.color: Qt.darker(color, 1.5)
         Text {
             id: button_state_text
@@ -115,8 +116,8 @@ Rectangle {
 
     ]
 
-    radius: gradientBorder
-    gradient: enableGradientBorder ? defaultGradient : null
+    radius: gradientBorderRadius
+    gradient: enableGradientBorder ? (gradientBorder ? gradientBorder : defaultGradient) : null
 
     Gradient {
         id: defaultGradient

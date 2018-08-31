@@ -25,12 +25,12 @@ Item {
 //        ListElement { type: "space"; group: "category_service"; hidden: false; }
         //-------------------------
         ListElement { text: "СЕРВИС";   type: "category"; name: "service"; hidden: false }
-        ListElement { text: "Калькулятор"; type: "button"; name: "Calc"; iconSrc: ""; group: "service"; hidden: false }
-        ListElement { text: "Настройки"; type: "button"; name: "Calc"; iconSrc: ""; group: "service"; hidden: false }
+        ListElement { text: "Калькулятор"; type: "button"; name: "Calc"; iconSrc: ""; iconText:""; group: "service"; hidden: false }
+        ListElement { text: "Настройки"; type: "button"; name: "Calc"; iconSrc: ""; iconText:""; group: "service"; hidden: false }
         ListElement { type: "space"; group: "service"; hidden: false; }
         //-------------------------
         ListElement { text: "СПРАВКА"; type: "category"; name: "help"; hidden: false }
-        ListElement { text: "О программе"; type: "button"; name: "About"; iconSrc: ""; group: "help"; hidden: false }
+        ListElement { text: "О программе"; type: "button"; name: "About"; iconSrc: ""; iconText:""; group: "help"; hidden: false }
         ListElement { type: "space"; group: "help"; hidden: false; }
     }
 
@@ -97,6 +97,7 @@ Item {
                     property int ourIndex: index
                     property string nameAttr: toCorrectString(name, "")
                     property string iconAttr: toCorrectString(iconSrc, "")
+                    property string iconSymbolAttr: toCorrectString(iconText, "")
                     property string groupAttr: toCorrectString(group, "")
                     property bool hiddenAttr: toCorrectBool(hidden, false)
                 }

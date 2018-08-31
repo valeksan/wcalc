@@ -3,7 +3,6 @@
         <file>main.qml</file>
         <file>qtquickcontrols2.conf</file>
         <file>components/NumBox.qml</file>
-        <file>components/ButtonB.qml</file>
         <file>AppHeader.qml</file>
         <file>Colors.qml</file>
         <file>components/MenuBackIcon.qml</file>
@@ -13,10 +12,14 @@
         <file>components/LeftMenuButton.qml</file>
         <file>components/LeftMenuCategory.qml</file>
         <file>components/LeftMenuSpacer.qml</file>
-        <file>controls/Loader.qml</file>
-        <file>controls/Variables.qml</file>
         <file>fonts/fontawesome-webfont.ttf</file>
         <file>FontAwesome.qml</file>
         <file>main.cpp</file>
+        <file>pages/Settings.qml</file>
+        <file>pages/LoadCard.qml</file>
+        <file>pages/About.qml</file>
+        <file>pages/CardInfo.qml</file>
+        <file>components/ButtonState.qml</file>
+        <file>components/ScalebleLoader.qml</file>
     </qresource>
 </RCC>

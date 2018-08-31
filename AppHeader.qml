@@ -42,36 +42,6 @@ Rectangle {
                 }
             }
         }
-
-//        Rectangle {
-//            height: 48
-//            width: 48
-//            radius: 5
-//            color: (!showLeftMenu) ? appColors.headerBackgroundColor : appColors.collapseMenuCategoryColor
-//            Item {
-//                height: parent.height-6
-//                width: parent.width-6
-//                anchors.centerIn: parent
-//                Image {
-//                    id: img_icon_menu
-//                    anchors.fill: parent
-//                    source: "qrc:/img/menu.png"
-//                }
-//                MouseArea {
-//                    id: menu_mousearea
-//                    anchors.fill: parent
-//                    onPressed: {
-//                        if(showLeftMenu) {
-//                            showLeftMenu = false
-//                            //console.log("showLeftMenu = false")
-//                        } else {
-//                            showLeftMenu = true
-//                            //console.log("showLeftMenu = true")
-//                        }
-//                    }
-//                }
-//            }
-//        }
         Rectangle { width: 5 }
     }
 }

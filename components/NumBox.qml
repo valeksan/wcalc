@@ -58,8 +58,10 @@ Item {
     }
 
     /* Дополнительные информационные строки */
-    property string suffix: ""                  // текст который идет сразу за выводом числа (например можно указать единицу измерения)
-    property string prefix: ""                  // текст который идет сразу перед выводом числа    
+    property string suffix: ""                  // текст который идет сразу за выводом числа (например можно указать единицу измерения) - "суфикс"
+    property string prefix: ""                  // текст который идет сразу перед выводом числа - "префикс"
+    property bool visibleSuffixInEdit: true     // показывать "суфикс" при редактировании
+    property bool visiblePrefixInEdit: false    // показывать "префикс" при редактировании
 
     /* Названия кнопок шагового приращения -/+ */
     property string labelButtonUp: "+"                // текст кнопки увеличения значения на шаг приращения
@@ -288,7 +290,6 @@ Item {
     /* Функционал для работы с буфером обмена */
     Item {
         id: clipboard
-        opacity: 0
         property alias buffer: helper.text
         function copy(text) {
             buffer = text;
@@ -315,6 +316,7 @@ Item {
         TextEdit {
             id: helper
             text: ""
+            visible: false
         }
     }
 
@@ -555,7 +557,7 @@ Item {
                 }
                 Text {
                     id: pre
-                    visible: input.visible
+                    visible: visiblePrefixInEdit ? input.visible : false
                     text: control_root.prefix
                     font.pixelSize: 10
                     verticalAlignment: Qt.AlignVCenter
@@ -568,7 +570,7 @@ Item {
                     id: suf
                     text: control_root.suffix
                     font.pixelSize: 10
-                    visible: input.visible
+                    visible: visibleSuffixInEdit ? input.visible : false
                     verticalAlignment: Qt.AlignVCenter
                     anchors.right: parent.right
                     anchors.rightMargin: 5

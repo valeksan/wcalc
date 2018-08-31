@@ -4,6 +4,7 @@ import QtQuick.Controls 2.1
 Rectangle {
     property alias button: btn
     property string iconSrc: ""
+    property string iconText: ""
     property alias font: labelButton.font
     property alias textColor: labelButton.color
     property alias text: labelButton.text
@@ -27,6 +28,11 @@ Rectangle {
                 source: iconSrc
                 mipmap: true
                 anchors.centerIn: parent                
+            }
+            Text {
+                id: icon_text
+                text: iconText
+                font.family: awesome.family
             }
         }
         Label {
