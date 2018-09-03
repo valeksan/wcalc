@@ -40,9 +40,15 @@ ApplicationWindow {
     }
 
     Settings {
-        id: settings
+        id: cfg
         category: "App"
         property string currency: "руб"
+        property double d_w: 0.1
+        property double d_h: 0.1
+        property double d_price: 100
+        property double s_price: 400
+        property double s_minimum: 4.0
+        property double price_per_count: 100
     }
 
     Colors {

@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Controls.Material 2.2
 
 import "../components" as Components
 
@@ -15,11 +16,32 @@ Item {
         return Math.round(x*Math.pow(10,precision))/Math.pow(10,precision);
     }
     function getS(w_par, h_par, c_par, precision) {
-        return fixValue(w_par*h_par*c_par, precision);
+        return fixValue((w_par+cfg.d_w)*(h_par+cfg.d_h)*c_par, precision);
     }
-    function getPrice(sab_par, precision) {
-        return fixValue(sab_par*200, precision);
+    function sumWindows() {
+        var i;
+        var windows_count = 0;
+        for(i=0; i<modelWindowSizes.count; i++) {
+            windows_count += modelWindowSizes.get(i).count;
+        }
+        return windows_count;
     }
+    function getPriceFinal(precision) {
+        var sab_par = sumS(precision);
+        var result = 0.0;
+        var count_windows = sumWindows();
+        if(sab_par < cfg.s_minimum) {
+            result = fixValue(cfg.s_minimum * cfg.s_price + count_windows*cfg.price_per_count, precision);
+        } else {
+            result = fixValue(sab_par*cfg.s_price+cfg.d_price*sumWindows(), precision);
+        }
+        return result;
+    }
+
+    function getPriceWindow(w, h, c, precision) {
+        return fixValue(getS(w,h,c,precision)*cfg.s_price + c*cfg.price_per_count, precision);
+    }
+
     function sumS(precision) {
         var i;
         var sum = 0.0;
@@ -28,13 +50,18 @@ Item {
         }
         return fixValue(sum, precision);
     }
+
     function sumPrices(precision) {
         var i;
+        var w_count = sumWindows();
+        var s_wh = sumS(precision);
         var sum = 0.0;
-        for(i=0; i<modelWindowSizes.count; i++) {
-            sum += getPrice(getS(modelWindowSizes.get(i).width, modelWindowSizes.get(i).height, modelWindowSizes.get(i).count, precision), precision);
+        if(s_wh < cfg.s_minimum) {
+            sum = fixValue(cfg.s_minimum * cfg.s_price + w_count*cfg.price_per_count, precision);
+        } else {
+            sum = fixValue(s_wh*cfg.s_price + w_count*cfg.price_per_count, precision);
         }
-        return fixValue(sum, precision);
+        return sum;
     }
     function findWindow(w_par, h_par) {
         var i;
@@ -104,7 +131,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 14
                     //text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + (height < 50 ? "\t" : "\n") + "Цена: " + sumPrices(3)) : ""
-                    text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + "\n" + "Цена: " + sumPrices(3)) : ""
+                    text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + "\n" + "Цена: " + getPriceFinal(3)) : ""
                 }
             }
         }
@@ -141,14 +168,6 @@ Item {
                     font.pixelSize: fixFontSize(height, 50, 14) // height < 50 ? height*14/50.0 : 14
                     fontInEditMode.pixelSize: fixFontSize(height, 50, 14)
                 }
-//                Text {
-//                    text: "X"
-//                    width: 30
-//                    Layout.alignment: Qt.AlignVCenter
-//                    horizontalAlignment: Text.AlignHCenter
-//                    font.pixelSize: 16
-//                    height: parent.height
-//                }
                 Components.NumBox {
                     id: height_calc_property
                     Layout.fillWidth: true
@@ -199,14 +218,6 @@ Item {
                         fontInEditMode.pixelSize: fixFontSize(height, 50, 14)
                     }
                 }
-//                Text {
-//                    text: ">"
-//                    width: 30
-//                    Layout.alignment: Qt.AlignVCenter
-//                    horizontalAlignment: Text.AlignHCenter
-//                    font.pixelSize: 16
-//                    height: parent.height
-//                }
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -226,7 +237,7 @@ Item {
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                                 font.pixelSize: 14
-                                text:  (s_ab > 0.0 ? "S' = " + s_ab + "\nЦена: " + getPrice(s_ab, height_calc_property.precision) : "")
+                                text:  (s_ab > 0.0 ? "S' = " + s_ab + "\nЦена: " + getPriceWindow(width_calc_property.value, height_calc_property.value, count_calc_property.value, height_calc_property.precision) : "")
                             }
                         }
                     }
@@ -346,61 +357,133 @@ Item {
             ListView {
                 width: parent.width
                 model: modelWindowSizes
-                delegate: delegateWindowSizeListItem
-                spacing: 2
-            }
-        }
-
-        Component {
-            id: delegateWindowSizeListItemTest
-            ItemDelegate {
-                text: "Item " + (index + 1)
-                width: parent.width
-            }
-        }
-
-        Component {
-            id: delegateWindowSizeListItem
-            Item {
-                property bool isEdit: false
-                width: parent.width
-                height: 50
-                Row {
-                    anchors.fill: parent
-                    Rectangle {
-                        height: parent.height
+                delegate: SwipeDelegate {
+                    id: delegateSwipe
+                    property bool isEdit: false
+                    property bool toRemoveSwipe: false
+                    width: parent.width
+                    height: 50
+                    text: ""
+                    swipe.right: Rectangle {
+                        clip: true
                         width: parent.width
-                        color: "#f1f1f1"
-                        Rectangle {
-                            id: rectSizeInfo
-                            height: parent.height-4
-                            width: 100
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 2
-                            color: "#f1f3ff"
-                            border.color: Qt.darker(color, 1.2)
-                            border.width: 1
-                            Text {
-                                id: textSizeWindow
-                                text: model.width + " x " + model.height + ((model.count>1)?(" x" + model.count):"")
-                                anchors.fill: parent
-                                verticalAlignment: Text.AlignVCenter
-                                horizontalAlignment: Text.AlignHCenter
-                            }
+                        height: parent.height
+                        color: SwipeDelegate.pressed ? "#555" : "#666"
+                        Label {
+                            font.family: "Fontello"
+                            text: delegateSwipe.swipe.complete ? "\ue805"    // icon-cw-circled
+                                                        :"\ue801"       // icon-cancel-circled-1
+                            padding: 20
+                            anchors.fill: parent
+                            horizontalAlignment: Qt.AlignRight
+                            verticalAlignment: Qt.AlignVCenter
+                            opacity: 2 * -delegateSwipe.swipe.position
+                            color: Material.color(delegateSwipe.swipe.complete ? Material.Green : Material.Red, Material.Shade200)
+                            Behavior on color { ColorAnimation { } }
                         }
-                        Text {
-                            id: info
-                            property double s_ab: getS(model.width, model.height, model.count, 3)
-                            text: "S' = " + s_ab + "\nЦена: " + getPrice(s_ab, 3);
-                            anchors.left: rectSizeInfo.right
-                            anchors.leftMargin: 10
+                        Label {
+                            text: qsTr("Потрачено")
+                            color: "white"
+                            padding: 20
+                            anchors.fill: parent
+                            horizontalAlignment: Qt.AlignLeft
+                            verticalAlignment: Qt.AlignVCenter
+                            opacity: delegateSwipe.swipe.complete ? 1 : 0
+                            Behavior on opacity { NumberAnimation { } }
+                        }
+                        SwipeDelegate.onClicked: delegate.swipe.close()
+                        SwipeDelegate.onPressedChanged: {
+                            undoTimer.stop();
+                        }
+                    }
+                    Timer {
+                        id: undoTimer
+                        interval: 100
+                        onTriggered: modelWindowSizes.remove(index)
+                    }
+                    swipe.onOpened: toRemoveSwipe = true;
+                    swipe.onCompleted: undoTimer.start()
+                    Row {
+                        visible: !toRemoveSwipe
+                        anchors.fill: parent
+                        clip: true
+                        Rectangle {
                             height: parent.height
-                            verticalAlignment: Text.AlignVCenter
+                            width: parent.width
+                            color: "#f1f1f1"
+                            clip: true
+                            Rectangle {
+                                id: rectSizeInfo
+                                height: parent.height-4
+                                width: 100
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.leftMargin: 2
+                                color: "#f1f3ff"
+                                border.color: Qt.darker(color, 1.2)
+                                border.width: 1
+                                Text {
+                                    id: textSizeWindow
+                                    text: model.width + " x " + model.height + ((model.count>1)?(" x" + model.count):"")
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
+                            Text {
+                                id: info
+                                property double s_ab: getS(model.width, model.height, model.count, 3)
+                                text: "S' = " + s_ab + "\nЦена: " + getPriceWindow(model.width, model.height, model.count, 3);
+                                anchors.left: rectSizeInfo.right
+                                anchors.leftMargin: 10
+                                height: parent.height
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            Row {
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 2
+                                Rectangle {
+                                    height: parent.height//-4
+                                    width: height
+                                    color: "#ccc"
+                                    border.color: Qt.darker(color, 1.2)
+                                    border.width: 1
+                                    Text {
+                                        anchors.fill: parent
+                                        verticalAlignment: Text.AlignVCenter
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: awesome.icons.fa_times
+                                        font.family: awesome.family
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            modelWindowSizes.remove(index, 1);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+                spacing: 2
+                remove: Transition {
+                    SequentialAnimation {
+                        PauseAnimation { duration: 125 }
+                        NumberAnimation { property: "height"; to: 0; easing.type: Easing.InOutQuad }
+                    }
+                }
+                displaced: Transition {
+                    SequentialAnimation {
+                        PauseAnimation { duration: 125 }
+                        NumberAnimation { property: "y"; easing.type: Easing.InOutQuad }
+                    }
+                }
+                ScrollIndicator.vertical: ScrollIndicator { }
             }
-        }
+        }        
+
     }
 }
