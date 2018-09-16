@@ -13,12 +13,15 @@ ApplicationWindow {
     title:   qsTr("Smart home")
     minimumWidth: minimumPageWidth
 
+    property int desktopTestWidth: 400 //240
+    property int desktopTestHeight: 400 //300
+
     function isDesktopApp() {
         return Qt.platform.os === "linux" || Qt.platform.os === "unix" || Qt.platform.os === "windows";
     }
 
-    width:  isDesktopApp() ? 240 : Screen.desktopAvailableWidth
-    height: isDesktopApp() ? 300 : Screen.desktopAvailableHeight
+    width:  isDesktopApp() ? desktopTestWidth : Screen.desktopAvailableWidth
+    height: isDesktopApp() ? desktopTestHeight : Screen.desktopAvailableHeight
 
     property int headerHeight: 0.1*minDim < 25 ? 25 : (0.1*minDim > 50 ? 50 : 0.1*minDim)
     property int footerHeight: 0

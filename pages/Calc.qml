@@ -3,7 +3,12 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Material 2.2
 
+import Qt.labs.settings 1.0
+
 import "../components" as Components
+
+import QtQuick.LocalStorage 2.0
+import "../js/Database.js" as JS
 
 Item {
     id: page
@@ -15,9 +20,11 @@ Item {
     function fixValue(x, precision) {
         return Math.round(x*Math.pow(10,precision))/Math.pow(10,precision);
     }
+
     function getS(w_par, h_par, c_par, precision) {
         return fixValue((w_par+cfg.d_w)*(h_par+cfg.d_h)*c_par, precision);
     }
+
     function sumWindows() {
         var i;
         var windows_count = 0;
@@ -26,6 +33,7 @@ Item {
         }
         return windows_count;
     }
+
     function getPriceFinal(precision) {
         var sab_par = sumS(precision);
         var result = 0.0;
@@ -83,19 +91,41 @@ Item {
             if(wIndex !== -1) {
                 var prevCount = modelWindowSizes.get(wIndex).count;
                 modelWindowSizes.setProperty(wIndex, "count", prevCount + c_par);
+                JS.dbUpdate(modelWindowSizes.get(wIndex).width, modelWindowSizes.get(wIndex).height, modelWindowSizes.get(wIndex).count, modelWindowSizes.get(wIndex).id)
             } else {
-                modelWindowSizes.append( {"width":fixValueWidth,"height":fixValueHeight,"count":c_par} );
+                var id = JS.dbInsert(fixValueWidth, fixValueHeight, c_par);
+                modelWindowSizes.append( {"id":id,"width":fixValueWidth,"height":fixValueHeight,"count":c_par} );
             }
         }
     }
+    function remWindow(id_par, c_par) {
+        var wIndex = -1;
+        var i;
+        for(i=0; i<modelWindowSizes.count; i++) {
+            if(modelWindowSizes.get(i).id === id_par) {
+                wIndex = i;
+            }
+        }
+        if(c_par === -1) {
+            JS.dbDeleteRow(id_par);
+            if(wIndex !== -1) {
+                modelWindowSizes.remove(wIndex, 1);
+            }
+        } else {
+            //... ! coming son ! ...
+        }
+    }
+
+    //function load
+
     function getLastWidth() {
         var count = modelWindowSizes.count;
-        var width = count > 0 ? modelWindowSizes.get(count-1).width : 0;
+        var width = count > 0 ? modelWindowSizes.get(count-1).width : 0.1;
         return width;
     }
     function getLastHeght() {
         var count = modelWindowSizes.count;
-        var height = count > 0 ? modelWindowSizes.get(count-1).height : 0;
+        var height = count > 0 ? modelWindowSizes.get(count-1).height : 0.1;
         return height;
     }
 
@@ -130,8 +160,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 14
-                    //text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + (height < 50 ? "\t" : "\n") + "Цена: " + sumPrices(3)) : ""
-                    text: modelWindowSizes.count > 0 ? ("S' = " + sumS(3) + "\n" + "Цена: " + getPriceFinal(3)) : ""
+                    text: modelWindowSizes.count > 0 ? ("S' = " + sumS(height_calc_property.precision) + "\n" + "Цена: " + getPriceFinal(height_calc_property.precision)) : ""
                 }
             }
         }
@@ -165,7 +194,7 @@ Item {
                         //console.log(number)
                         value = number
                     }
-                    font.pixelSize: fixFontSize(height, 50, 14) // height < 50 ? height*14/50.0 : 14
+                    font.pixelSize: fixFontSize(height, 50, 14)
                     fontInEditMode.pixelSize: fixFontSize(height, 50, 14)
                 }
                 Components.NumBox {
@@ -318,10 +347,10 @@ Item {
                             addWindow(width_calc_property.value, height_calc_property.value, count_calc_property.value, height_calc_property.precision);
                         }
                         onPressed: {
-                            state = "on"
+                            state = "on";
                         }
                         onReleased: {
-                            state = "off"
+                            state = "off";
                         }
                     }
                 }
@@ -342,11 +371,10 @@ Item {
 
         ListModel {
             id: modelWindowSizes
-
-            Component.onCompleted: {
-                append({ "width": 0.5, "height": 0.76, "count": 1 });
-                append({ "width": 0.35, "height": 0.55, "count": 2 });
-            }
+//            Component.onCompleted: {
+//                append({ "width": 0.5, "height": 0.76, "count": 1 });
+//                append({ "width": 0.35, "height": 0.55, "count": 2 });
+//            }
         }
 
         ScrollView {
@@ -362,23 +390,26 @@ Item {
                     property bool isEdit: false
                     property bool toRemoveSwipe: false
                     width: parent.width
-                    height: 50
+                    height: windowsAddPanel.minHeight < 25 ? 25 : (windowsAddPanel.minHeight > 50 ? 50 : windowsAddPanel.minHeight)
                     text: ""
                     swipe.right: Rectangle {
+                        z: 1
                         clip: true
-                        width: parent.width
-                        height: parent.height
+                        width: parent.width-rectSizeInfo.width-4
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: parent.height-4
                         color: SwipeDelegate.pressed ? "#555" : "#666"
+                        opacity: delegateSwipe.swipe.complete ? 1 : 0
                         Label {
-                            font.family: "Fontello"
-                            text: delegateSwipe.swipe.complete ? "\ue805"    // icon-cw-circled
-                                                        :"\ue801"       // icon-cancel-circled-1
+                            font.family: awesome.family
+                            text: delegateSwipe.swipe.complete ? "\uf058" : "\uf057"
                             padding: 20
                             anchors.fill: parent
                             horizontalAlignment: Qt.AlignRight
                             verticalAlignment: Qt.AlignVCenter
                             opacity: 2 * -delegateSwipe.swipe.position
-                            color: Material.color(delegateSwipe.swipe.complete ? Material.Green : Material.Red, Material.Shade200)
+                            color: Material.color(!delegateSwipe.swipe.complete ? Material.Green : Material.Red, Material.Shade200)
                             Behavior on color { ColorAnimation { } }
                         }
                         Label {
@@ -387,24 +418,31 @@ Item {
                             padding: 20
                             anchors.fill: parent
                             horizontalAlignment: Qt.AlignLeft
-                            verticalAlignment: Qt.AlignVCenter
-                            opacity: delegateSwipe.swipe.complete ? 1 : 0
+                            verticalAlignment: Qt.AlignVCenter                            
                             Behavior on opacity { NumberAnimation { } }
+                            font.pixelSize: fixFontSize(height, 50, 14)
                         }
-                        SwipeDelegate.onClicked: delegate.swipe.close()
+                        SwipeDelegate.onClicked: delegateSwipe.swipe.close()
                         SwipeDelegate.onPressedChanged: {
                             undoTimer.stop();
                         }
                     }
                     Timer {
                         id: undoTimer
-                        interval: 100
-                        onTriggered: modelWindowSizes.remove(index)
+                        interval: 1600
+                        onTriggered: {
+                            //modelWindowSizes.remove(index)
+                            remWindow(modelWindowSizes.get(index).id, -1);
+                        }
                     }
                     swipe.onOpened: toRemoveSwipe = true;
                     swipe.onCompleted: undoTimer.start()
+                    swipe.onClosed: {
+                        toRemoveSwipe = false;
+                    }
                     Row {
-                        visible: !toRemoveSwipe
+                        //visible: !toRemoveSwipe
+                        z: 0
                         anchors.fill: parent
                         clip: true
                         Rectangle {
@@ -412,22 +450,25 @@ Item {
                             width: parent.width
                             color: "#f1f1f1"
                             clip: true
-                            Rectangle {
+                            Components.ScalebleLoader {
                                 id: rectSizeInfo
                                 height: parent.height-4
                                 width: 100
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.left: parent.left
                                 anchors.leftMargin: 2
-                                color: "#f1f3ff"
-                                border.color: Qt.darker(color, 1.2)
-                                border.width: 1
-                                Text {
-                                    id: textSizeWindow
-                                    text: model.width + " x " + model.height + ((model.count>1)?(" x" + model.count):"")
-                                    anchors.fill: parent
-                                    verticalAlignment: Text.AlignVCenter
-                                    horizontalAlignment: Text.AlignHCenter
+                                content: Rectangle {
+                                    color: "#f1f3ff"
+                                    border.color: Qt.darker(color, 1.2)
+                                    border.width: 1
+                                    Text {
+                                        id: textSizeWindow
+                                        text: model.width + " x " + model.height + ((model.count>1)?(" x" + model.count):"")
+                                        anchors.fill: parent
+                                        verticalAlignment: Text.AlignVCenter
+                                        horizontalAlignment: Text.AlignHCenter
+                                        font.pixelSize: fixFontSize(height, 50, 14)
+                                    }
                                 }
                             }
                             Text {
@@ -438,6 +479,7 @@ Item {
                                 anchors.leftMargin: 10
                                 height: parent.height
                                 verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: fixFontSize(height, 50, 14)
                             }
                             Row {
                                 anchors.right: parent.right
@@ -460,7 +502,8 @@ Item {
                                     MouseArea {
                                         anchors.fill: parent
                                         onClicked: {
-                                            modelWindowSizes.remove(index, 1);
+                                            //modelWindowSizes.remove(index, 1);
+                                            remWindow(modelWindowSizes.get(index).id, -1);
                                         }
                                     }
                                 }
@@ -483,7 +526,10 @@ Item {
                 }
                 ScrollIndicator.vertical: ScrollIndicator { }
             }
-        }        
-
+        }
+    }
+    Component.onCompleted: {
+        JS.dbInit();
+        JS.dbReadAll();
     }
 }

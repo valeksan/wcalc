@@ -21,5 +21,6 @@
         <file>pages/CardInfo.qml</file>
         <file>components/ButtonState.qml</file>
         <file>components/ScalebleLoader.qml</file>
+        <file>js/Database.js</file>
     </qresource>
 </RCC>

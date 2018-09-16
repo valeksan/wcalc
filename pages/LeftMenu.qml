@@ -21,16 +21,16 @@ Item {
     ListModel {
         id: modelLeftMenu
         //-------------------------
-//        ListElement { text: "ФАЙЛ"; type: "category"; name: "category_file"; hidden: false }
+//        ListElement { text: "ФАЙЛ"; type: "category"; name: "category_file"; hidden: false; }
 //        ListElement { type: "space"; group: "category_service"; hidden: false; }
         //-------------------------
-        ListElement { text: "СЕРВИС";   type: "category"; name: "service"; hidden: false }
-        ListElement { text: "Калькулятор"; type: "button"; name: "Calc"; iconSrc: ""; iconText:""; group: "service"; hidden: false }
-        ListElement { text: "Настройки"; type: "button"; name: "Calc"; iconSrc: ""; iconText:""; group: "service"; hidden: false }
+        ListElement { text: "СЕРВИС";   type: "category"; name: "service"; iconText:"\uf107"; hidden: false; }
+        ListElement { text: "Калькулятор"; type: "button"; name: "Calc"; iconSrc: ""; iconText:""; group: "service"; hidden: false; }
+        ListElement { text: "Настройки"; type: "button"; name: "Calc"; iconSrc: ""; iconText:""; group: "service"; hidden: false; }
         ListElement { type: "space"; group: "service"; hidden: false; }
         //-------------------------
-        ListElement { text: "СПРАВКА"; type: "category"; name: "help"; hidden: false }
-        ListElement { text: "О программе"; type: "button"; name: "About"; iconSrc: ""; iconText:""; group: "help"; hidden: false }
+        ListElement { text: "СПРАВКА"; type: "category"; name: "help"; iconText:"\uf107"; hidden: false; }
+        ListElement { text: "О программе"; type: "button"; name: "About"; iconSrc: ""; iconText:""; group: "help"; hidden: false; }
         ListElement { type: "space"; group: "help"; hidden: false; }
     }
 
@@ -67,7 +67,7 @@ Item {
                 right: parent.right
                 rightMargin: 10
                 bottom: parent.bottom
-                bottomMargin: 60
+                bottomMargin: 5
             }
             ListView {
                 id: listView
@@ -189,6 +189,8 @@ Item {
     Component {
         id: categoryMenuComponent
         Components.LeftMenuCategory {
+            sourceIconArrowText.text: iconSymbolAttr
+            sourceIconArrowText.font.family: awesome.family
             text: labelText
             font.pixelSize: 24
             font.bold: true

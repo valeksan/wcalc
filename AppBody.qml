@@ -1,15 +1,15 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.3
 
 import "components" as Components
 
 Item {
     id: body
-//    anchors.fill: parent
-    Rectangle {
+    StackLayout {
         id: loadArea
         anchors.fill: parent
-
+        currentIndex: app.showLeftMenu ? 1 : 0
         Loader {
             id: pageLoader
             function setPage(name) {
@@ -19,8 +19,15 @@ Item {
                 }
                 return "pages/Calc.qml";
             }
-            anchors.fill: parent
-            source: app.showLeftMenu ? "pages/LeftMenu.qml" : setPage(app.activePage)
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            source: setPage(app.activePage)
+        }
+        Loader {
+            id: menuLoader
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            source: "pages/LeftMenu.qml"
         }
     }
 }
